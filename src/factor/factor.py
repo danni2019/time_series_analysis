@@ -73,7 +73,6 @@ class FactorX:
         return source_df[['factor', 'signal']]
 
     def factor_tmom_bias_01(self, w):
-        """cumsum price trend signs, accumulate trend on over half of samples."""
         source_df = self.main_df.copy()
         source_df['return_close'] = source_df['close'].diff() / source_df['close'].shift()
         ls = source_df['return_close'].rolling(w).apply(
