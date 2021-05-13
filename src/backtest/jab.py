@@ -1,7 +1,10 @@
 """
+author: muzexlxl
+email: muzexlxl@foxmail.com
+
 backtest logic
-another revision.
 """
+
 
 import pandas as pd
 import numpy as np

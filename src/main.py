@@ -1,10 +1,15 @@
+"""
+author: muzexlxl
+email: muzexlxl@foxmail.com
+"""
+
 from src.backtest.jab import BackTester
 
 if __name__ == "__main__":
     sample = BackTester(
         id=['symbol', 'IF'],
         # id=['code', 'RB2010'],
-        data_source='rq',
+        data_source='xx',
         timeframe='T1',
         test_date=["2021-04-30", '2021-05-10'],
         data_type='intraday_data',

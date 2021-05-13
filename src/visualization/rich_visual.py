@@ -1,3 +1,10 @@
+"""
+author: muzexlxl
+email: muzexlxl@foxmail.com
+
+visualization right here!
+"""
+
 import pandas as pd
 import numpy as np
 from pyecharts.charts import Line, Bar, Kline, Grid, Scatter, Page, Scatter3D
