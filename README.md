@@ -51,6 +51,6 @@ Organization
    2.2 如果回测结果满足一定的条件，则生成一个基于pyecharts的可视化页面。
 
 
-* 我本地用的是Clickhouse，为了简单方便，数据库部分可以按需求自行搭建，factor.py中的数据来源改成了data中的文件
+* 我本地用的是Clickhouse，为了简单方便，数据库部分可以按需求自行搭建，factor.py和backtest.py中的数据来源改成了data中的文件
 
 
