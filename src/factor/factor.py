@@ -1,4 +1,6 @@
 """
+author: muzexlxl
+
 time series factors
 bias: -1 0 1
 neut: 1, 0

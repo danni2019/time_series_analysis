@@ -1,7 +1,9 @@
 """
+author: muzexlxl
+
 backtest logic
-another revision.
 """
+
 
 import pandas as pd
 import numpy as np
