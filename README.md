@@ -1,6 +1,5 @@
-JAB time series analysis tool
+One time series analysis tool
 ===============
-Just another backtester
 
 
 Organization
