@@ -2,7 +2,7 @@
 author: muzexlxl
 """
 
-from src.backtest.jab import BackTester
+from src.backtest.backtest import BackTester
 
 if __name__ == "__main__":
     sample = BackTester(
