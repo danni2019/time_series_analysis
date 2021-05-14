@@ -1,4 +1,4 @@
-JAB
+JAB time series analysis tool
 ===============
 Just another backtester
 
