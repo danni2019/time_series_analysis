@@ -1,0 +1,25 @@
+2021-05-14 14:04:38 - backtest.py - INFO - -- 2021-05-14_14:04:38 --
+Strategy: [<bound method FactorX.factor_tmom_bias_01 of <src.factor.factor.FactorX object at 0x7fbcd8ed97c0>>] 
+Transaction Fee Percentage: 0.0
+Intraday Closing Time: [datetime.time(15, 0)]
+Params: [{'w': 7}, {'w': 15}]
+Test Period: 2021-04-30 00:00:00 - 2021-05-10 00:00:00
+-- ['symbol', 'IF'] --
+-- T1 -- 
+-- Position: 1 --
+-- Barly Stoploss: 100 --
+-- Action on Sig0: close --
+-- Signal Shift: [1] --
+Transaction Fee Total: 0.0%
+Signal Ratio: 66.39%
+Open Position: 231 times; Close Position: 231 times
+Sharpe Ratio: -0.32 
+Tail Ratio: 0.6
+Alpha: -90.55% | Beta: -99.55% 
+Max Drawdown: -1.79% 
+Max Daily Drawdown: -1.66% 
+Total Win: 296 | Total Loss: 319 | W/L Ratio: 0.93
+Strategy Return: -0.09% | Strategy Annualized Return: -7.06%. 
+BenchMark return: -3.65% | BenchMark Annualized Return: -90.1%.
+
+
