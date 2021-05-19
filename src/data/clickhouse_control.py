@@ -1,4 +1,6 @@
 """
+author: muzexlxl
+
 manipulate clickhouse db using both clickhouse-drive and pandahouse
 """
 import clickhouse_driver as cd
