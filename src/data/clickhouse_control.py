@@ -1,4 +1,7 @@
 """
+author: muzexlxl
+email: muzexlxl@foxmail.com
+
 manipulate clickhouse db using both clickhouse-drive and pandahouse
 """
 import clickhouse_driver as cd
