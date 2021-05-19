@@ -147,7 +147,11 @@ Organization
 
 #### Updates
 
-* 210519 更新了回测框架使用数据来源部分，方便直接feed dataframe或匹配数据库操作。
+* 210519 
+  
+  更新了回测框架使用数据来源部分，方便直接feed dataframe或匹配数据库操作。
+  
+  更新了requirements.txt文件
 
 ----
 
