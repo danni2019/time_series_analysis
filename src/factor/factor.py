@@ -17,33 +17,42 @@ import math
 
 class FactorX:
 
-    def __init__(self, id: list, timeframe: str, data_source: str, start: str, end: str):
-        # self.db_conn = cc.ClickHouse(data_source)
-        # self.db_conn = 0
-        # self.id = id
-        # if self.id[0] == 'symbol':
-        #     self.database = self.db_conn.db_conf.db_processed
-        #     self.data_table = self.db_conn.db_conf.processed_trade_data_main
-        # elif self.id[0] == 'code':
-        #     self.database = self.db_conn.db_conf.db_raw
-        #     self.data_table = self.db_conn.db_conf.raw_trade_data
-        # else:
-        #     raise AttributeError(f'Wrong id type: {self.id[0]}')
-        # self.timeframe = timeframe
-        # self.data_source = data_source
-        # self.main_df = self.data_reader(start, end)
-        self.main_df = pd.DataFrame()
+    def __init__(self, init_: [dict, pd.DataFrame]):
+        if type(init_) == dict:
+            # id: list, timeframe: str, data_source: str, start: str, end: str
+            id, timeframe, data_source, start, end = init_.get('id'), \
+                                                     init_.get('timeframe'), \
+                                                     init_.get('data_source'), \
+                                                     init_.get('start'), \
+                                                     init_.get('end')
+            self.db_conn = cc.ClickHouse(data_source)
+            self.id = id
+            if self.id[0] == 'symbol':
+                self.database = self.db_conn.db_conf.db_processed
+                self.data_table = self.db_conn.db_conf.processed_trade_data_main
+            elif self.id[0] == 'code':
+                self.database = self.db_conn.db_conf.db_raw
+                self.data_table = self.db_conn.db_conf.raw_trade_data
+            else:
+                raise AttributeError(f'Wrong id type: {self.id[0]}')
+            self.timeframe = timeframe
+            self.data_source = data_source
+            self.main_df = self.data_reader(start, end)
+        elif isinstance(init_, pd.DataFrame):
+            self.main_df = init_
+        else:
+            raise TypeError(f"Wrong initial data type passed: expect dict or DataFrame, got {type(init_)} instead.")
 
-    # def data_reader(self, start_date, end_date):
-    #     sql_ = f"select `code`, `symbol`, `datetime`, `open`, `close`, " \
-    #            f"`high`, `low`, `turnover`, `volume`, `open_interest` from " \
-    #            f"{self.database}.{self.data_table} where `{self.id[0]}` = '{self.id[1]}' and " \
-    #            f"`timeframe` = '{self.timeframe}' and `data_source` = '{self.data_source}' and " \
-    #            f"`datetime` >= '{start_date}' and `datetime` <= '{end_date}'"
-    #     df = self.db_conn.reader_to_dataframe(sql_)
-    #     df['datetime'] = pd.to_datetime(df['datetime'])
-    #     df['date'] = df['datetime'].dt.strftime("%Y-%m-%d")
-    #     return df.set_index('datetime')
+    def data_reader(self, start_date, end_date):
+        sql_ = f"select `code`, `symbol`, `datetime`, `open`, `close`, " \
+               f"`high`, `low`, `turnover`, `volume`, `open_interest` from " \
+               f"{self.database}.{self.data_table} where `{self.id[0]}` = '{self.id[1]}' and " \
+               f"`timeframe` = '{self.timeframe}' and `data_source` = '{self.data_source}' and " \
+               f"`datetime` >= '{start_date}' and `datetime` <= '{end_date}'"
+        df = self.db_conn.reader_to_dataframe(sql_)
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['date'] = df['datetime'].dt.strftime("%Y-%m-%d")
+        return df.set_index('datetime')
 
     def reset_df(self, df: pd.DataFrame):
         self.main_df = df

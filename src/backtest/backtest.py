@@ -1,10 +1,7 @@
 """
-author: muzexlxl
-email: muzexlxl@foxmail.com
-
 backtest logic
+another revision.
 """
-
 
 import pandas as pd
 import numpy as np
@@ -13,7 +10,7 @@ import logging
 import inspect
 from datetime import datetime, time
 from empyrical import alpha_beta, sharpe_ratio, max_drawdown, annual_return, tail_ratio
-import src.factor.factor as ft
+import src.features.factors.factor_tmom as ft
 import src.visualization.rich_visual as rv
 
 pd.set_option('display.max_rows', 100)
@@ -22,10 +19,10 @@ pd.set_option('display.width', 1000)
 
 fp = os.path.dirname(__file__)
 
-logpath = os.path.join(fp, "../../docs/backtest/backtest_log.txt")
+log_path = os.path.join(fp, "../../docs/backtest/backtest_log.txt")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-filing = logging.FileHandler(filename=logpath)
+filing = logging.FileHandler(filename=log_path)
 streaming = logging.StreamHandler()
 formatter = logging.Formatter(fmt="%(asctime)s - %(filename)s - %(levelname)s - %(message)s",
                               datefmt="%Y-%m-%d %H:%M:%S")
@@ -35,13 +32,14 @@ logger.addHandler(filing)
 logger.addHandler(streaming)
 
 
-class BackTester:
+class BackTest:
 
     def __init__(
             self,
             id: list,
-            data_source: str,
-            timeframe: str,
+            data_source: [str, None],
+            timeframe: [str, None],
+            direct_feed: [pd.DataFrame, None],
             test_date: list,
             data_type: str,
             day_close: [list, None],
@@ -49,6 +47,7 @@ class BackTester:
             sig_0_action: str,
             position_pctg: float,
             transaction_fee_pctg: float,
+            return_base: str = 'pre_close',
     ):
         """
         Test it before use it, bro!
@@ -56,41 +55,60 @@ class BackTester:
             id: target symbol or contract code
             data_source: ~
             timeframe: ~ T5 T1 etc...
+            direct_feed: use dataframe directly right here.
             test_date: pass in sth like [2017, 2021]
             data_type: ~
+            day_close: list of time when you want to close up your position with in a trading day.
             stop_loss:  stop loss percentage on each bar.
             sig_0_action:  action to take on signal 0, pass 'close' or 'hold'
             position_pctg:  how much exposure on your position, this will affect both benchmark position and strategy position
+            transaction_fee_pctg: like it says
+            return_base: pass in 'pre_close' or 'open', and that's the base on which you will calc your barly return.
         """
         self.trans_fee_pctg = transaction_fee_pctg
-        self.data_source = data_source.upper()
+        self.data_source = data_source.upper() if data_source is not None else None
         self.timeframe = timeframe
         self.start_dt = datetime.strptime(test_date[0], "%Y-%m-%d")
         self.end_dt = datetime.strptime(test_date[1], "%Y-%m-%d")
         self.id = id
         self.data_type = data_type
-        self.fac = ft.FactorX(
-            self.id,
-            self.timeframe,
-            self.data_source,
-            test_date[0],
-            test_date[1],
-        )
+        if direct_feed is None:
+            ini = {
+                'id': self.id,
+                'timeframe': self.timeframe,
+                'data_source': self.data_source,
+                'start': test_date[0],
+                'end': test_date[1],
+            }
+            self.fac = ft.FactorX(
+                init_=ini
+            )
+        elif isinstance(direct_feed, pd.DataFrame):
+            self.fac = ft.FactorX(
+                init_=direct_feed
+            )
+        else:
+            raise TypeError(f"Wrong direct data feed type passed. Got {type(direct_feed)}")
 
-        # # load data from clickhouse
-        # df = self.fac.main_df.copy()
-        # or load from parquet files
-        df = pd.read_parquet("../data/futures/raw/intraday_data/index300_main_430-510.parquet")
+        df = self.fac.main_df.copy()
+
         df.index = pd.to_datetime(df.index)
         df.sort_index(ascending=True, inplace=True)
         df = df[(df.index.date >= self.start_dt.date()) & (df.index.date <= self.end_dt.date())].copy()
-
         if df.empty:
             raise ValueError('Empty DataFrame.')
-        df['return_close'] = round((df['close'] / df['close'].shift() - 1).fillna(0), 5)
+        if return_base == 'pre_close':
+            df['return_close'] = round((df['close'] / df['close'].shift() - 1).fillna(0), 5)
+        elif return_base == 'open':
+            df['return_close'] = round((df['close'] / df['open'] - 1).fillna(0), 5)
+        else:
+            raise AttributeError(
+                f'Wrong parameter passed: return_base. current: {return_base}, '
+                f'must be pre_close or open.'
+            )
         self.fac.reset_df(df)
-        self.source_df = df.copy()
-        self.df = df.copy()
+        self.df = self.fac.main_df.copy()
+        self.df['date'] = self.df.index.date
 
         # initiate params
         self.pnl = 0
@@ -106,11 +124,13 @@ class BackTester:
         self.func, self.neut_func, self.neut = None, None, None
 
     def reload_source(self):
-        self.df = self.source_df
+        self.df = self.fac.main_df.copy()
+        self.df['date'] = self.df.index.date
+
         self.pnl = 0
         self.winner, self.loser = 0, 0
 
-    def make_bias_signal(self, valve, w_s, func, sig_shift, kwargs):
+    def make_signal(self, valve, w_s, func, sig_shift, kwargs):
         """
 
         Args:
@@ -120,26 +140,12 @@ class BackTester:
             **kwargs:
         """
         factors_ls = [func[i](**(kwargs[i])).shift(sig_shift[i]) for i in range(len(func))]
-        self.bias_factor_df = pd.DataFrame([v['factor'].rename(func[k].__name__) for k, v in enumerate(factors_ls)]).T
-        self.bias_factor_df['return_close'] = self.df['return_close']
+        self.factor_df = pd.DataFrame([v['factor'].rename(func[k].__name__) for k, v in enumerate(factors_ls)]).T
+        self.factor_df['return_close'] = self.df['return_close']
         self.df['signal'] = self.fac.factor_compound([i['signal'] for i in factors_ls], w=w_s, valve=valve)
         self.signal_params = kwargs
         self.func = func
         self.sig_shift = sig_shift
-
-        if self.neut is not None:
-            self.df['neut'] = self.neut
-            self.df['signal'] = np.where(self.df['neut'] == 1, self.df['signal'], 0)
-        else:
-            self.neut_factor_df = None
-
-    def make_neut_signal(self, valve, w_s, func, sig_shift, kwargs):
-        factors_ls = [func[i](**(kwargs[i])).shift(sig_shift[i]) for i in range(len(func))]
-        self.neut_factor_df = pd.DataFrame([v['factor'].rename(func[k].__name__) for k, v in enumerate(factors_ls)]).T
-        self.neut_factor_df['return_close'] = self.df['return_close']
-        neut = self.fac.factor_compound([i['signal'] for i in factors_ls], w=w_s, valve=valve)
-        self.neut = neut
-        self.neut_func = func
 
     def backtester(self):
         self.df.fillna(0, inplace=True)
@@ -268,7 +274,6 @@ class BackTester:
         trans_fee_tot = self.df['transfee'].sum()
 
         return_ret, return_bench = {}, {}
-        self.df['date'] = self.df.index.date
         for (k, v) in self.df.groupby('date'):
             return_ret[k] = v['strat_return'].sum()
             return_bench[k] = v['bench_return'].sum()
@@ -299,6 +304,7 @@ class BackTester:
                 f"-- Signal Shift: {self.sig_shift} --\n" \
                 f"Transaction Fee Total: {round(trans_fee_tot * 100, 2)}%\n" \
                 f"Signal Ratio: {round(self.signal_ratio * 100, 2)}%\n" \
+                f"Turnover Rate: {round(((self.open_t + self.close_t) / tot_cnt) * 100, 2)}%\n" \
                 f"Open Position: {self.open_t} times; Close Position: {self.close_t} times\n" \
                 f"Sharpe Ratio: {round(sharpe, 2)} \n" \
                 f"Tail Ratio: {round(t_r, 2)}\n" \
@@ -311,9 +317,6 @@ class BackTester:
         source_code = "\n\n".join(
             [inspect.getsource(f) for f in self.func]
         ) if self.func is not None else " "
-        source_code_neut = "\n\n".join(
-            [inspect.getsource(f) for f in self.neut_func]
-        ) if self.neut_func is not None else " "
 
         t_stamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         logger.info(f"-- {t_stamp} --\n{desc_}{returns}\n")
@@ -353,8 +356,7 @@ class BackTester:
                 desc +
                 '\n* NOTE: THIS DESCRIPTION DIFFERS FROM W/L RATIO ABOVE '
                 'BECAUSE ONLY SIGNAL DIRECTION CORRECTNESS IS CONSIDERED HERE.\n' +
-                '\n\nBias_factors: \n' + source_code +
-                '\nNeut_factors: \n' + source_code_neut
+                '\n\nFactor Source code: \n' + source_code
             )
 
         # 但只有高夏普低回撤的回测才配拥有高级可视化
@@ -363,18 +365,14 @@ class BackTester:
                 path_, "rich_visual.html"
             )
             kline = rv.draw_kline_with_yield_and_signal(self.df)
-            scatters_fr = rv.draw_factor_return_eval(self.bias_factor_df)
-            scatters_ff = rv.draw_factor_eval(self.bias_factor_df)
+            scatters_fr = rv.draw_factor_return_eval(self.factor_df)
+            scatters_ff = rv.draw_factor_eval(self.factor_df)
             res_charts = [kline, *scatters_fr, *scatters_ff]
-            if self.neut_factor_df is not None:
-                sca_neut_fr = rv.draw_factor_return_eval(self.neut_factor_df)
-                sca_neut_ff = rv.draw_factor_eval(self.neut_factor_df)
-                res_charts += [*sca_neut_fr, *sca_neut_ff]
             rv.form_page(res_charts, rich_visual_path)
 
     def multi_backtester(self, w_s, valve, func, sig_shift, params: list):
         for param_set in params:
-            self.make_bias_signal(
+            self.make_signal(
                 valve=valve,
                 w_s=w_s,
                 func=func,
@@ -399,7 +397,7 @@ class BackTester:
 
     def multi_test_signal_corr(self, w_s, valve, func, sig_shift, params):
         for param in params:
-            self.make_bias_signal(
+            self.make_signal(
                 valve=valve,
                 w_s=w_s,
                 func=func,
@@ -407,3 +405,4 @@ class BackTester:
                 kwargs=param
             )
             self.test_signal_corr()
+
