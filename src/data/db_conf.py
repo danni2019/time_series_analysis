@@ -1,3 +1,10 @@
+"""
+author: muzexlxl
+email: muzexlxl@foxmail.com
+
+sql configurations
+"""
+
 class DbConf:
     def __init__(self, data_source: str):
         self.data_source = data_source
