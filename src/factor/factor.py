@@ -9,10 +9,7 @@ neut: 1, 0
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
-import collections
-import math
-# import src.data.clickhouse_control as cc
+import src.data.clickhouse_control as cc
 
 
 class FactorX:

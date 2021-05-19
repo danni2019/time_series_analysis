@@ -148,10 +148,12 @@ Organization
 #### Updates
 
 * 210519 
+
+更新了ClickHouse读数据支持， 以及部分初始化检查、建表操作。
   
-  更新了回测框架使用数据来源部分，方便直接feed dataframe或匹配数据库操作。
+更新了回测框架使用数据来源部分，方便直接feed dataframe或匹配数据库操作。
   
-  更新了requirements.txt文件
+更新了requirements.txt文件。
 
 ----
 
