@@ -1,6 +1,6 @@
 """
-backtest logic
-another revision.
+author: muzexlxl
+email: muzexlxl@foxmail.com
 """
 
 import pandas as pd
