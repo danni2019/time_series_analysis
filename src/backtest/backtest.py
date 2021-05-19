@@ -1,6 +1,5 @@
 """
-backtest logic
-another revision.
+author: muzexlxl
 """
 
 import pandas as pd
