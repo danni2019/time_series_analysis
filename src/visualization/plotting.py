@@ -59,14 +59,3 @@ def draw_scatter(
 
 
 
-
-
-
-class Plot_ts:
-
-    def plot_pnl_period_cumsum(self,meta_data):
-        meta_data['pnl_period_cumsum'].plot()
-        plt.show()
-
-class Plot_cs:
-    pass
