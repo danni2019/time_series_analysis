@@ -147,8 +147,10 @@ Organization
 ----
 
 ## 关于速度
-目前仅backtest模块速度大致在 1000k bars/ s，但pyecharts绘图耗时比较严重，所以目前仅对较好的回测结果进行pyecharts的可视化。
-
+目前仅backtest模块速度大致在 1000k bars/ s，~~但pyecharts绘图耗时比较严重，所以目前仅对较好的回测结果进行pyecharts的可视化。~~
+耗时来自于两方面：
+1. 散点图
+2. 为了顾及matplotlib，不得不收集所有协程任务后再统一运行。而理想状态下应该是直接在新线程下动态添加协程任务。
 ----
 
 ## Todos
