@@ -4,30 +4,48 @@ One time series analysis tool
 
 Organization
 --------------------
-    .
-    ├── LICENSE
-    ├── README.md
-    ├── data
-    │   └── futures
-    │       └── raw
-    │           └── intraday_data
-    │               └── index300_main_430-510.parquet
-    ├── docs
-    │   ├── backtest
-    │   └── log.txt
-    ├── requirements.txt
-    └── src
-        ├── __init__.py
-        ├── backtest
-        │   ├── __init__.py
-        │   └── backtest.py
-        ├── factor
-        │   ├── __init__.py
-        │   └── factor.py
-        ├── main.py
-        └── visualization
-            ├── __init__.py
-            └── rich_visual.py
+      .
+      ├── LICENSE
+      ├── README.md
+      ├── conf.ini
+      ├── data
+      │   └── futures
+      │       └── raw
+      ├── docs
+      │   └── backtest
+      ├── factor
+      │   └── IF
+      │       └── factor_tmom_T1_RTN_60.parquet
+      ├── notebook
+      │   └── Readme.md
+      ├── requirements.txt
+      ├── signal
+      │   └── IF
+      │       └── factor_tmom_T1_RTN_60.parquet
+      └── src
+          ├── __init__.py
+          ├── __pycache__
+          │   └── __init__.cpython-38.pyc
+          ├── backtest
+          │   ├── __init__.py
+          │   ├── __pycache__
+          │   ├── backtest_entry.py
+          │   ├── func_modules
+          │   └── test_config.py
+          ├── data
+          │   ├── __init__.py
+          │   ├── __pycache__
+          │   ├── clickhouse_control.py
+          │   ├── db_conf.py
+          │   └── redis_handle.py
+          ├── factor
+          │   ├── __init__.py
+          │   ├── __pycache__
+          │   └── factor.py
+          └── visualization
+              ├── __init__.py
+              ├── __pycache__
+              └── plotting.py
 
 --------
 
@@ -97,7 +115,7 @@ Organization
       | 75%   |     0.00044     |    -8e-05       |        0 |
       | max   |     0.00703     |    -1e-05       |        0 |
       * NOTE: THIS DESCRIPTION DIFFERS FROM W/L RATIO ABOVE BECAUSE ONLY SIGNAL DIRECTION CORRECTNESS IS CONSIDERED HERE.
-      
+         
       
       Bias_factors: 
          # 这里记录的是方向性的因子
@@ -137,11 +155,14 @@ Organization
 
 ## Todos
 
-后续想要做的一些事情：
-1. 完善这一套回测框架的逻辑验证工作，确保逻辑层面和最终结果的准确性。
+后续想要做的一些事情（以及一些尚存的问题）：
+
+~~1. 完善这一套回测框架的逻辑验证工作，确保逻辑层面和最终结果的准确性。~~
+1. matplotlib is not thread safe. 所以目前统计描述部分的异步过程并不能提高太多效率。
 2. 充填、扩展回测结果统计分析的内容，以及扩展可视化内容。
 3. 将目前的单品种、多因子改造为多品种、多因子框架。
-4. python有些地方会遇到精度问题，目前这部分我还没有很好的解决方案，Decimal太慢。目前用pandas和numpy强制检查及转换类型可以部分规避这类风险。
+
+~~4. python有些地方会遇到精度问题，目前这部分我还没有很好的解决方案，Decimal太慢。目前用pandas和numpy强制检查及转换类型可以部分规避这类风险。~~
 
 
 
@@ -154,6 +175,19 @@ Organization
 更新了回测框架使用数据来源部分，方便直接feed dataframe或匹配数据库操作。
   
 更新了requirements.txt文件。
+
+* 210601
+
+1. 回测框架结构改变： 
+
+   1. 目前采用研究与回测分离的模式。研究统一在notebook文件夹下进行，
+   2. 因子固化后存入factor/factor.py中，并将生成的因子与信号文件分别存入factor和signal文件夹下
+   3. 回测过程直接读取行情数据文件和因子信号文件，不再实时生成因子及信号。
+   4. 回测框架分为回测和统计描述两部分， 通过一个Redis建立的简易消息队列进行通信：
+      1. 回测：大致功能与结构保持不变，每次回测需要配置test_config.py
+      2. 统计描述：由于echarts实在太慢了，所以退而求其次，取消echarts画图，由matplotlib和seaborn替代部分功能。
+2. 回测收益统计基准改变，之前是根据(close - pre_close) / pre_close 计算收益，目前在回测过程中改为点差，可以部分规避精度问题，
+   但会造成回测结果描述的不一致，使用时需要注意这一点。
 
 ----
 

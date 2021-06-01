@@ -1,3 +1,3 @@
 
 
-__all__ = ['jab']
+__all__ = ['backtest_entry', 'func_modules']
