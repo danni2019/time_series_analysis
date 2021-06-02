@@ -188,6 +188,10 @@ Organization
       2. 统计描述：由于echarts实在太慢了，所以退而求其次，取消echarts画图，由matplotlib和seaborn替代部分功能。
 2. 回测收益统计基准改变，之前是根据(close - pre_close) / pre_close 计算收益，目前在回测过程中改为点差，可以部分规避精度问题，
    但会造成回测结果描述的不一致，使用时需要注意这一点。
+   
+* 210602
+1. 增加notebook文件：template.ipynb，该文件是一个因子研究的模板文件。
+2. 增加工具文件： factor/consolidate_factor.py，用来配合notebook中固化因子代码及文件。
 
 ----
 
