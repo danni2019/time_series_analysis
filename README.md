@@ -1,9 +1,12 @@
-One time series analysis tool
-===============
+# Time Series Analysis
 
 [English overview](README.en.md)
 
+这是一个 2021 年的 Python 时序研究工作区。研究笔记生成因子和信号，回测读取保存的行情和信号，输出成交与表现分析。
 
+![历史时序研究中的 K 线与信号叠加](docs/sample/kline.png)
+
+可从[研究笔记](notebook/Readme.md)、[回测配置](src/backtest/test_config.py)和[回测入口](src/backtest/backtest_entry.py)开始。下方保留原始项目结构和研究说明。
 
 Organization
 --------------------
@@ -135,7 +138,7 @@ Organization
 
 
 2. K线 + 收益曲线 + 信号正确性 复合图
-![Kline](./docs/sample/kline.png)
+[K 线与信号叠加图](docs/sample/kline.png)
    
 
 3. 因子-收益相关性散点图
@@ -195,8 +198,3 @@ Organization
 * 210602
 1. 增加notebook文件：template.ipynb，该文件是一个因子研究的模板文件。
 2. 增加工具文件： factor/consolidate_factor.py，用来配合notebook中固化因子代码及文件。
-
-----
-
-#### 联系作者：
-
